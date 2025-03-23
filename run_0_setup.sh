@@ -57,7 +57,7 @@ source /etc/profile.d/mimicnet.sh
 echo "Installing prereqs..."
 sudo apt-get update
 sudo apt-get install -y build-essential gcc g++ bison flex perl \
-    qt5-default libqt5opengl5-dev tcl-dev tk-dev libxml2-dev \
+     libqt5opengl5-dev tcl-dev tk-dev libxml2-dev \
     zlib1g-dev default-jre doxygen graphviz libwebkitgtk-1.0
 sudo apt-get install -y openmpi-bin libopenmpi-dev
 sudo apt-get install -y libpcap-dev
