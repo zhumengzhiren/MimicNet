@@ -196,32 +196,30 @@ else
     echo "glog installation completed"
 fi
 
-# Check pybind11 installation stage
-if [[ -f "${STAGE_DIR}/pybind11_done" ]]; then
-    echo "pybind11 already installed, skipping this step..."
+# Check pybind11 and PyTorch/ATEN installation stage - combined to ensure they succeed or fail together
+if [[ -f "${STAGE_DIR}/pytorch_complete_done" ]]; then
+    echo "PyBind11 and PyTorch/ATEN already installed, skipping this step..."
 else
-    echo "Installing pybind11..."
+    echo "Installing pybind11 and PyTorch/ATEN as a combined step..."
+    
+    # Create a temporary flag to track success
+    touch "${STAGE_DIR}/pytorch_install_in_progress"
+    
+    # Clone PyTorch repository
     git clone --recursive https://github.com/pytorch/pytorch || true
     cd pytorch
-    git checkout v1.0.1
+    git checkout v2.6.0
     git rm --cached third_party/nervanagpu || true
     git rm --cached third_party/eigen || true
     git submodule update --init --recursive
+    
+    # Install pybind11
     cd third_party/pybind11
     python setup.py install
     cp -r include ${BASE_DIR}/opt/
     cd ../..
     
-    # Mark this stage as completed
-    touch "${STAGE_DIR}/pybind11_done"
-    echo "pybind11 installation completed"
-fi
-
-# Check PyTorch/ATEN installation stage
-if [[ -f "${STAGE_DIR}/pytorch_aten_done" ]]; then
-    echo "PyTorch/ATEN already installed, skipping this step..."
-else
-    echo "Installing pytorch/ATEN..."
+    # Install PyTorch/ATEN
     TMPDIR=${BASE_DIR}/tmp python setup.py install
     cd aten/
     mkdir -p build
@@ -233,10 +231,15 @@ else
     fi
     make -j
     make install
+    cd ../../..
     
-    # Mark this stage as completed
-    touch "${STAGE_DIR}/pytorch_aten_done"
-    echo "PyTorch/ATEN installation completed"
+    # Remove the old individual flags if they exist
+    rm -f "${STAGE_DIR}/pybind11_done" "${STAGE_DIR}/pytorch_aten_done"
+    
+    # Mark this combined stage as completed
+    rm -f "${STAGE_DIR}/pytorch_install_in_progress"
+    touch "${STAGE_DIR}/pytorch_complete_done"
+    echo "PyBind11 and PyTorch/ATEN installation completed as a single unit"
 fi
 
 # Check final installation steps
@@ -251,3 +254,7 @@ else
 fi
 
 echo "All installation steps have been completed!"
+
+# Add completion flag at the end of the script
+touch "${STAGE_DIR}/setup_complete"
+echo "Setup completion flag has been set."
