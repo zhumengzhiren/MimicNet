@@ -230,7 +230,10 @@ else
         cmake .. -DCMAKE_INSTALL_PREFIX=${BASE_DIR}/opt -DUSE_TENSORRT=OFF -DUSE_NVRTC=ON
     fi
     make -j
-    make install
+    mkdir -p ${BASE_DIR}/opt/lib
+    mkdir -p ${BASE_DIR}/opt/include
+    cp -r lib/* ${BASE_DIR}/opt/lib/ || true
+    cp -r ../src/ATen ${BASE_DIR}/opt/include/ || true
     cd ../../..
     
     # Remove the old individual flags if they exist
